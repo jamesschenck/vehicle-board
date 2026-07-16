@@ -3,102 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vehicle Board</title>
+<title>Call-Up Board</title>
 <style>
   :root{
     --bg:#0f1420; --panel:#171d2b; --panel-2:#1e2637; --line:#2a3244;
-    --text:#e8ecf4; --muted:#8a93a6; --accent:#3b82f6; --accent-soft:#1d3a63;
-    --good:#22c55e; --warn:#f59e0b; --danger:#ef4444; --radius:14px;
+    --text:#e8ecf4; --muted:#8a93a6; --accent:#3b82f6;
+    --good:#22c55e; --danger:#ef4444; --radius:14px;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
-    padding:0 0 96px;
+    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; padding:0 0 96px;
   }
   header{
-    position:sticky;top:0;z-index:10;
-    background:rgba(15,20,32,.92); backdrop-filter:blur(8px);
+    position:sticky;top:0;z-index:10;background:rgba(15,20,32,.92);backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line); padding:14px 18px;
   }
   .htop{display:flex;align-items:center;justify-content:space-between;gap:10px}
   header h1{margin:0;font-size:18px;font-weight:700}
   .count{font-size:13px;color:var(--muted);margin-top:2px}
-  .banner{
-    margin-top:10px;padding:9px 12px;border-radius:10px;font-size:12.5px;line-height:1.4;
-    background:#3a2a12;border:1px solid #5c431c;color:#f6c877;display:none;
+  .copybtn{
+    flex:none;background:var(--panel-2);border:1.5px solid var(--line);color:var(--text);
+    padding:9px 13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;
   }
+  .copybtn:active{transform:scale(.97)}
+  .copybtn.done{background:var(--good);color:#04210f;border-color:var(--good)}
+  .banner{margin-top:10px;padding:9px 12px;border-radius:10px;font-size:12.5px;line-height:1.4;
+    background:#3a2a12;border:1px solid #5c431c;color:#f6c877;display:none}
   .banner.show{display:block}
   .wrap{max-width:760px;margin:0 auto;padding:16px}
 
-  /* filter chips */
   .filters{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
-  .chip{
-    flex:none;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:600;
-    background:var(--panel-2);border:1.5px solid var(--line);color:var(--muted);cursor:pointer;white-space:nowrap;
-  }
+  .chip{flex:none;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:600;
+    background:var(--panel-2);border:1.5px solid var(--line);color:var(--muted);cursor:pointer;white-space:nowrap}
   .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
   .cards{display:flex;flex-direction:column;gap:12px}
-  .veh{
-    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    padding:14px 14px 12px;cursor:pointer;transition:.12s;border-left:4px solid var(--line);
-  }
+  .veh{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 14px 12px;cursor:pointer;transition:.12s;border-left:4px solid var(--line)}
   .veh:active{transform:scale(.995)}
+  .veh.gone{opacity:.55}
   .veh .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-  .veh .name{font-size:16px;font-weight:700;line-height:1.25}
-  .pill{
-    flex:none;padding:4px 10px;border-radius:99px;font-size:11.5px;font-weight:700;
-    text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;
-  }
+  .idline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tag{background:var(--accent-soft,#1d3a63);color:#9cc2ff;font-weight:800;font-size:13px;
+    padding:3px 9px;border-radius:8px;letter-spacing:.3px}
+  .name{font-size:16px;font-weight:700;line-height:1.2}
+  .vehmodel{font-size:14px;color:var(--muted);margin-top:3px}
+  .pill{flex:none;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
   .meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:13.5px}
-  .meta .m{display:flex;align-items:center;gap:6px;color:var(--text)}
+  .meta .m{display:flex;align-items:center;gap:6px}
   .meta .lbl{color:var(--muted);font-size:12px}
   .veh .foot{margin-top:9px;font-size:11.5px;color:var(--muted)}
   .empty{text-align:center;color:var(--muted);padding:48px 20px;font-size:14px;line-height:1.5}
 
-  /* add button */
-  .fab{
-    position:fixed;right:18px;bottom:20px;z-index:20;
-    background:var(--accent);color:#fff;border:none;border-radius:99px;
-    padding:15px 22px;font-size:15px;font-weight:700;cursor:pointer;
-    box-shadow:0 8px 24px rgba(59,130,246,.45);
-  }
+  .fab{position:fixed;right:18px;bottom:20px;z-index:20;background:var(--accent);color:#fff;border:none;
+    border-radius:99px;padding:15px 22px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(59,130,246,.45)}
   .fab:active{transform:scale(.97)}
 
-  /* modal */
   .modal{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
   .modal.show{display:flex}
-  .sheet{
-    background:var(--panel);width:100%;max-width:760px;border-radius:16px 16px 0 0;
-    border:1px solid var(--line);padding:18px;max-height:90vh;overflow:auto;
-  }
+  .sheet{background:var(--panel);width:100%;max-width:760px;border-radius:16px 16px 0 0;
+    border:1px solid var(--line);padding:18px;max-height:92vh;overflow:auto}
   .sheet h3{margin:0 0 14px;font-size:16px}
+  .rowflex{display:flex;gap:10px}
+  .rowflex > div{flex:1}
   label.lbl2{display:block;font-size:12.5px;color:var(--muted);margin:14px 0 6px;font-weight:600}
-  label.lbl2:first-of-type{margin-top:0}
-  input[type=text],textarea{
-    width:100%;background:var(--panel-2);border:1.5px solid var(--line);border-radius:10px;
-    color:var(--text);font-size:16px;padding:12px 14px;font-family:inherit;outline:none;
-  }
+  .sheet .rowflex:first-of-type label.lbl2{margin-top:0}
+  input[type=text],textarea{width:100%;background:var(--panel-2);border:1.5px solid var(--line);border-radius:10px;
+    color:var(--text);font-size:16px;padding:12px 14px;font-family:inherit;outline:none}
   input:focus,textarea:focus{border-color:var(--accent)}
-  textarea{resize:vertical;min-height:56px}
+  textarea{resize:vertical;min-height:52px}
   .statusgrid{display:flex;flex-wrap:wrap;gap:8px}
-  .sbtn{
-    padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);
-    color:var(--text);font-size:14px;font-weight:600;cursor:pointer;flex:1 1 auto;min-width:120px;text-align:center;
-  }
+  .sbtn{padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);
+    color:var(--text);font-size:14px;font-weight:600;cursor:pointer;flex:1 1 auto;min-width:110px;text-align:center}
   .sbtn.sel{color:#fff;border-color:transparent}
   .modal-actions{display:flex;gap:10px;margin-top:20px}
   button.btn{border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;flex:1}
   .btn.save{background:var(--accent);color:#fff}
   .btn.del{background:transparent;color:var(--danger);border:1.5px solid var(--danger)!important;flex:0 0 auto;padding:14px 18px}
   .btn.cancel{background:var(--panel-2);color:var(--text);border:1.5px solid var(--line)!important;flex:0 0 auto;padding:14px 18px}
-  .toast{
-    position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
-    background:var(--good);color:#04210f;padding:10px 18px;border-radius:99px;
-    font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:40;
-  }
+
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--good);color:#04210f;
+    padding:10px 18px;border-radius:99px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:40}
   .toast.show{opacity:1}
 </style>
 </head>
@@ -106,9 +94,10 @@
 <header>
   <div class="htop">
     <div>
-      <h1>Vehicle Board</h1>
+      <h1>Call-Up Board</h1>
       <div class="count" id="count">Loading…</div>
     </div>
+    <button class="copybtn" id="copyBtn">Copy list</button>
   </div>
   <div class="banner" id="banner"></div>
 </header>
@@ -120,22 +109,32 @@
 
 <button class="fab" id="addBtn">+ Add vehicle</button>
 
-<!-- edit / add modal -->
 <div class="modal" id="modal">
   <div class="sheet">
     <h3 id="sheetTitle">Add vehicle</h3>
 
+    <div class="rowflex">
+      <div>
+        <label class="lbl2">Tag #</label>
+        <input type="text" id="f-tag" placeholder="T37 / #50">
+      </div>
+      <div>
+        <label class="lbl2">Time</label>
+        <input type="text" id="f-eta" placeholder="8am / 4p">
+      </div>
+    </div>
+
+    <label class="lbl2">Name</label>
+    <input type="text" id="f-name" placeholder="Customer last name">
+
     <label class="lbl2">Vehicle</label>
-    <input type="text" id="f-name" placeholder="e.g. Silver Tahoe — Smith (RO 4821)">
+    <input type="text" id="f-vehicle" placeholder="e.g. Honda Civic">
 
     <label class="lbl2">Status</label>
     <div class="statusgrid" id="statusGrid"></div>
 
     <label class="lbl2">Location / spot</label>
-    <input type="text" id="f-location" placeholder="e.g. Bay 3, Lot A-12, Alignment rack">
-
-    <label class="lbl2">ETA</label>
-    <input type="text" id="f-eta" placeholder="e.g. Today 4:00 PM, Waiting on parts">
+    <input type="text" id="f-location" placeholder="e.g. Lot A-12, Bay 3">
 
     <label class="lbl2">Notes (optional)</label>
     <textarea id="f-notes" placeholder="Anything the team should know"></textarea>
@@ -158,222 +157,212 @@
 const SUPABASE_URL = "";       // e.g. https://abcxyz.supabase.co
 const SUPABASE_ANON_KEY = "";  // the "anon public" key (safe to be public)
 
-/* Status options — label + color */
+/* Status stages — matches your Slack lists */
 const STATUSES = [
-  { key:"checked_in", label:"Checked in",   color:"#3b82f6" },
-  { key:"in_bay",     label:"In bay",       color:"#8b5cf6" },
-  { key:"waiting",    label:"Waiting parts",color:"#f59e0b" },
-  { key:"road_test",  label:"Road test",    color:"#06b6d4" },
-  { key:"ready",      label:"Ready",        color:"#22c55e" },
-  { key:"picked_up",  label:"Picked up",    color:"#6b7280" },
+  { key:"call_up",  label:"Call-up",       color:"#3b82f6" },
+  { key:"leaving",  label:"Leaving today", color:"#22c55e" },
+  { key:"gone",     label:"Gone",          color:"#6b7280" },
 ];
 const statusOf = k => STATUSES.find(s=>s.key===k) || STATUSES[0];
 
+/* Titles used when copying a list out to Slack */
+const LIST_TITLES = { all:"VEHICLE CALL-UPS", call_up:"PRELIMINARY CALL-UPS", leaving:"VEHICLES LEAVING TODAY", gone:"GONE" };
+
 /* ============================================================
-   DATA STORE — two backends behind one interface.
-   Local (Preview) uses localStorage; Live uses Supabase.
+   DATA STORE — Local (Preview) or Supabase (Live) behind one interface
    ============================================================ */
 const LIVE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 let store;
 
 function localStore(){
-  const KEY = "vehicle_board_v1";
+  const KEY = "callup_board_v1";
   const read = () => { try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } };
   const write = arr => localStorage.setItem(KEY, JSON.stringify(arr));
   let cb = ()=>{};
   window.addEventListener("storage", e=>{ if(e.key===KEY) cb(); });
   return {
     live:false,
-    async list(){ return read().sort((a,b)=> (b.updated_at||"").localeCompare(a.updated_at||"")); },
+    async list(){ return read().sort((a,b)=>(b.updated_at||"").localeCompare(a.updated_at||"")); },
     async save(v){
-      const arr = read();
-      const now = new Date().toISOString();
-      if(v.id){ const i = arr.findIndex(x=>x.id===v.id); if(i>=0) arr[i] = {...v, updated_at:now}; }
+      const arr=read(), now=new Date().toISOString();
+      if(v.id){ const i=arr.findIndex(x=>x.id===v.id); if(i>=0) arr[i]={...v,updated_at:now}; }
       else { arr.push({...v, id:crypto.randomUUID(), updated_at:now}); }
       write(arr); cb();
     },
     async remove(id){ write(read().filter(x=>x.id!==id)); cb(); },
-    onChange(fn){ cb = fn; },
+    onChange(fn){ cb=fn; },
   };
 }
 
 function supabaseStore(){
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const TABLE = "vehicles";
-  let cb = ()=>{};
-  sb.channel("vehicles-rt")
-    .on("postgres_changes", { event:"*", schema:"public", table:TABLE }, ()=>cb())
-    .subscribe();
+  const TABLE="vehicles"; let cb=()=>{};
+  sb.channel("veh-rt").on("postgres_changes",{event:"*",schema:"public",table:TABLE},()=>cb()).subscribe();
   return {
     live:true,
     async list(){
-      const { data, error } = await sb.from(TABLE).select("*").order("updated_at",{ascending:false});
-      if(error){ console.error(error); return []; }
-      return data;
+      const {data,error}=await sb.from(TABLE).select("*").order("updated_at",{ascending:false});
+      if(error){ console.error(error); return []; } return data;
     },
     async save(v){
-      const row = { name:v.name, status:v.status, location:v.location, eta:v.eta, notes:v.notes, updated_at:new Date().toISOString() };
-      if(v.id){ await sb.from(TABLE).update(row).eq("id", v.id); }
-      else { await sb.from(TABLE).insert(row); }
+      const row={ tag:v.tag, name:v.name, vehicle:v.vehicle, status:v.status, location:v.location, eta:v.eta, notes:v.notes, updated_at:new Date().toISOString() };
+      if(v.id){ await sb.from(TABLE).update(row).eq("id",v.id); } else { await sb.from(TABLE).insert(row); }
     },
-    async remove(id){ await sb.from(TABLE).delete().eq("id", id); },
-    onChange(fn){ cb = fn; },
+    async remove(id){ await sb.from(TABLE).delete().eq("id",id); },
+    onChange(fn){ cb=fn; },
   };
 }
 
-/* ============================================================
-   UI
-   ============================================================ */
-let vehicles = [];
-let activeFilter = "all";
-let editing = null; // current vehicle in modal, or null for new
+/* ============================================================ UI ============================================================ */
+let vehicles=[], activeFilter="all", editing=null, selectedStatus=STATUSES[0].key;
 
-async function refresh(){
-  vehicles = await store.list();
-  render();
-}
+const filtered = () => activeFilter==="all" ? vehicles : vehicles.filter(v=>v.status===activeFilter);
+
+async function refresh(){ vehicles=await store.list(); render(); }
 
 function render(){
-  renderFilters();
-  renderCards();
-  const n = vehicles.filter(v=>v.status!=="picked_up").length;
+  renderFilters(); renderCards();
+  const n=vehicles.filter(v=>v.status!=="gone").length;
   document.getElementById("count").textContent =
-    `${n} active vehicle${n===1?"":"s"}` + (store.live ? " · live" : " · preview (this device only)");
+    `${n} active` + (store.live ? " · live" : " · preview (this device only)");
 }
 
 function renderFilters(){
-  const el = document.getElementById("filters");
-  const counts = {};
-  vehicles.forEach(v=> counts[v.status]=(counts[v.status]||0)+1 );
-  const chips = [["all",`All (${vehicles.length})`]]
-    .concat(STATUSES.map(s=>[s.key, `${s.label} (${counts[s.key]||0})`]));
-  el.innerHTML = chips.map(([k,label])=>
-    `<div class="chip ${activeFilter===k?'active':''}" data-f="${k}">${label}</div>`).join("");
-  el.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ activeFilter=c.dataset.f; render(); });
+  const el=document.getElementById("filters"), counts={};
+  vehicles.forEach(v=>counts[v.status]=(counts[v.status]||0)+1);
+  const chips=[["all",`All (${vehicles.length})`]].concat(STATUSES.map(s=>[s.key,`${s.label} (${counts[s.key]||0})`]));
+  el.innerHTML=chips.map(([k,l])=>`<div class="chip ${activeFilter===k?'active':''}" data-f="${k}">${l}</div>`).join("");
+  el.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{activeFilter=c.dataset.f;render();});
 }
 
 function renderCards(){
-  const el = document.getElementById("cards");
-  let list = vehicles;
-  if(activeFilter!=="all") list = list.filter(v=>v.status===activeFilter);
-  if(!list.length){
-    el.innerHTML = `<div class="empty">No vehicles here yet.<br>Tap <b>+ Add vehicle</b> to put one on the board.</div>`;
-    return;
-  }
-  el.innerHTML = list.map(v=>{
-    const s = statusOf(v.status);
-    return `<div class="veh" data-id="${v.id}" style="border-left-color:${s.color}">
+  const el=document.getElementById("cards"); const list=filtered();
+  if(!list.length){ el.innerHTML=`<div class="empty">Nothing here yet.<br>Tap <b>+ Add vehicle</b> to put one on the board.</div>`; return; }
+  el.innerHTML=list.map(v=>{
+    const s=statusOf(v.status);
+    return `<div class="veh ${v.status==='gone'?'gone':''}" data-id="${v.id}" style="border-left-color:${s.color}">
       <div class="top">
-        <div class="name">${esc(v.name)||"(no name)"}</div>
+        <div>
+          <div class="idline">
+            ${v.tag?`<span class="tag">${esc(fmtTag(v.tag))}</span>`:""}
+            <span class="name">${esc(v.name)||"(no name)"}</span>
+          </div>
+          <div class="vehmodel">${esc(v.vehicle)||"—"}</div>
+        </div>
         <span class="pill" style="background:${s.color}22;color:${s.color}">${s.label}</span>
       </div>
       <div class="meta">
-        <div class="m"><span class="lbl">📍</span> ${esc(v.location)||"—"}</div>
-        <div class="m"><span class="lbl">🕒 ETA</span> ${esc(v.eta)||"—"}</div>
+        <div class="m"><span class="lbl">🕒</span> ${esc(v.eta)||"—"}</div>
+        ${v.location?`<div class="m"><span class="lbl">📍</span> ${esc(v.location)}</div>`:""}
       </div>
       ${v.notes?`<div class="foot">📝 ${esc(v.notes)}</div>`:""}
       <div class="foot">Updated ${timeAgo(v.updated_at)}</div>
     </div>`;
   }).join("");
-  el.querySelectorAll(".veh").forEach(card=>{
-    card.onclick = ()=> openModal(vehicles.find(x=>x.id===card.dataset.id));
-  });
+  el.querySelectorAll(".veh").forEach(c=>c.onclick=()=>openModal(vehicles.find(x=>x.id===c.dataset.id)));
 }
 
 /* modal */
-const modal = document.getElementById("modal");
+const modal=document.getElementById("modal");
 function openModal(v){
-  editing = v || null;
-  document.getElementById("sheetTitle").textContent = v ? "Edit vehicle" : "Add vehicle";
-  document.getElementById("f-name").value = v?.name || "";
-  document.getElementById("f-location").value = v?.location || "";
-  document.getElementById("f-eta").value = v?.eta || "";
-  document.getElementById("f-notes").value = v?.notes || "";
-  selectedStatus = v?.status || STATUSES[0].key;
+  editing=v||null;
+  document.getElementById("sheetTitle").textContent=v?"Edit vehicle":"Add vehicle";
+  document.getElementById("f-tag").value=v?.tag||"";
+  document.getElementById("f-eta").value=v?.eta||"";
+  document.getElementById("f-name").value=v?.name||"";
+  document.getElementById("f-vehicle").value=v?.vehicle||"";
+  document.getElementById("f-location").value=v?.location||"";
+  document.getElementById("f-notes").value=v?.notes||"";
+  selectedStatus=v?.status||STATUSES[0].key;
   renderStatusGrid();
-  document.getElementById("delBtn").style.display = v ? "block" : "none";
+  document.getElementById("delBtn").style.display=v?"block":"none";
   modal.classList.add("show");
-  if(!v) setTimeout(()=>document.getElementById("f-name").focus(), 50);
+  if(!v) setTimeout(()=>document.getElementById("f-tag").focus(),50);
 }
 function closeModal(){ modal.classList.remove("show"); editing=null; }
 
-let selectedStatus = STATUSES[0].key;
 function renderStatusGrid(){
-  const el = document.getElementById("statusGrid");
-  el.innerHTML = STATUSES.map(s=>{
-    const sel = s.key===selectedStatus;
+  const el=document.getElementById("statusGrid");
+  el.innerHTML=STATUSES.map(s=>{
+    const sel=s.key===selectedStatus;
     return `<div class="sbtn ${sel?'sel':''}" data-s="${s.key}" style="${sel?`background:${s.color}`:''}">${s.label}</div>`;
   }).join("");
-  el.querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{ selectedStatus=b.dataset.s; renderStatusGrid(); });
+  el.querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{selectedStatus=b.dataset.s;renderStatusGrid();});
 }
 
-document.getElementById("addBtn").onclick = ()=>openModal(null);
-document.getElementById("cancelBtn").onclick = closeModal;
-modal.onclick = e=>{ if(e.target===modal) closeModal(); };
+document.getElementById("addBtn").onclick=()=>openModal(null);
+document.getElementById("cancelBtn").onclick=closeModal;
+modal.onclick=e=>{ if(e.target===modal) closeModal(); };
 
-document.getElementById("saveBtn").onclick = async ()=>{
-  const v = {
-    id: editing?.id,
-    name: document.getElementById("f-name").value.trim(),
-    status: selectedStatus,
-    location: document.getElementById("f-location").value.trim(),
-    eta: document.getElementById("f-eta").value.trim(),
-    notes: document.getElementById("f-notes").value.trim(),
+document.getElementById("saveBtn").onclick=async()=>{
+  const v={
+    id:editing?.id,
+    tag:val("f-tag"), eta:val("f-eta"), name:val("f-name"),
+    vehicle:val("f-vehicle"), location:val("f-location"), notes:val("f-notes"),
+    status:selectedStatus,
   };
-  if(!v.name){ document.getElementById("f-name").focus(); return; }
-  await store.save(v);
-  closeModal(); toast("Saved ✓");
-  if(!store.live) refresh(); // live mode refreshes via realtime
+  if(!v.name && !v.tag){ document.getElementById("f-tag").focus(); return; }
+  await store.save(v); closeModal(); toast("Saved ✓");
+  if(!store.live) refresh();
 };
-
-document.getElementById("delBtn").onclick = async ()=>{
+document.getElementById("delBtn").onclick=async()=>{
   if(!editing) return;
   if(!confirm("Remove this vehicle from the board?")) return;
-  await store.remove(editing.id);
-  closeModal(); toast("Removed");
+  await store.remove(editing.id); closeModal(); toast("Removed");
   if(!store.live) refresh();
 };
 
+/* Copy current list as a Slack-ready message: Name / Vehicle / #Tag / Time */
+document.getElementById("copyBtn").onclick=async(e)=>{
+  const list=filtered();
+  if(!list.length){ toast("Nothing to copy"); return; }
+  const lines=[LIST_TITLES[activeFilter]||"VEHICLES"];
+  list.forEach(v=>{
+    const parts=[v.name, v.vehicle, v.tag?fmtTag(v.tag):"", v.eta].map(x=>(x||"").trim()).filter(Boolean);
+    let line=parts.join(" / ");
+    if(v.status==="gone") line+="  — GONE";
+    lines.push(line);
+  });
+  const text=lines.join("\n");
+  try{ await navigator.clipboard.writeText(text); }
+  catch(err){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  const b=e.target; const o=b.textContent; b.classList.add("done"); b.textContent="Copied ✓";
+  setTimeout(()=>{ b.classList.remove("done"); b.textContent=o; },1400);
+  toast("List copied for Slack ✓");
+};
+
 /* helpers */
-function esc(s){ return (s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function val(id){ return document.getElementById(id).value.trim(); }
+function fmtTag(t){ t=(t||"").trim(); return /^[#T]/i.test(t) ? t : "#"+t; }
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function timeAgo(iso){
   if(!iso) return "just now";
-  const d = (Date.now()-new Date(iso))/1000;
+  const d=(Date.now()-new Date(iso))/1000;
   if(d<60) return "just now";
   if(d<3600) return Math.floor(d/60)+" min ago";
   if(d<86400) return Math.floor(d/3600)+" hr ago";
   return new Date(iso).toLocaleDateString();
 }
 let toastTimer;
-function toast(msg){
-  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
-  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1500);
-}
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1500); }
 
-/* ============================================================
-   BOOT
-   ============================================================ */
+/* boot */
 function boot(){
   store = LIVE ? supabaseStore() : localStore();
   store.onChange(refresh);
   if(!LIVE){
-    const b=document.getElementById("banner");
-    b.className="banner show";
-    b.innerHTML="⚠️ <b>Preview mode.</b> Vehicles are saved only on this device and are not shared with your team yet. Send your developer the two Supabase values to turn on live sync.";
+    const b=document.getElementById("banner"); b.className="banner show";
+    b.innerHTML="⚠️ <b>Preview mode.</b> Vehicles are saved only on this device and are not shared with your team yet. Send your two Supabase values to turn on live sync.";
   }
   refresh();
 }
-
 if(LIVE){
-  // load the Supabase client library, then boot
   const s=document.createElement("script");
   s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-  s.onload=boot;
-  s.onerror=()=>{ document.getElementById("count").textContent="Could not load sync library"; };
+  s.onload=boot; s.onerror=()=>{ document.getElementById("count").textContent="Could not load sync library"; };
   document.head.appendChild(s);
-}else{
-  boot();
-}
+}else{ boot(); }
 </script>
 </body>
 </html>
