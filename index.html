@@ -70,6 +70,19 @@
     color:var(--text);font-size:16px;padding:12px 14px;font-family:inherit;outline:none}
   input:focus,textarea:focus{border-color:var(--accent)}
   textarea{resize:vertical;min-height:52px}
+  .lblrow{display:flex;align-items:center;justify-content:space-between;margin:14px 0 6px}
+  .lblrow .lbl2{margin:0}
+  select.selectfield{width:100%;background:var(--panel-2);border:1.5px solid var(--line);border-radius:10px;
+    color:var(--text);font-size:16px;padding:12px 40px 12px 14px;font-family:inherit;outline:none;
+    -webkit-appearance:none;appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path fill="%238a93a6" d="M6,8L0,0H12Z"/></svg>');
+    background-repeat:no-repeat;background-position:right 14px center}
+  select.selectfield:focus{border-color:var(--accent)}
+  .managebtn{background:none;border:none;color:var(--accent);font-size:12.5px;font-weight:700;cursor:pointer;padding:0}
+  .locrow{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:10px;margin-bottom:8px;font-size:14px}
+  .locrow .x{background:none;border:none;color:var(--danger);font-size:20px;font-weight:700;cursor:pointer;line-height:1;padding:0 4px}
+  .locempty{color:var(--muted);font-size:13px;padding:8px 0}
   .statusgrid{display:flex;flex-wrap:wrap;gap:8px}
   .sbtn{padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);
     color:var(--text);font-size:14px;font-weight:600;cursor:pointer;flex:1 1 auto;min-width:110px;text-align:center}
@@ -127,8 +140,11 @@
     <label class="lbl2">Status</label>
     <div class="statusgrid" id="statusGrid"></div>
 
-    <label class="lbl2">Location / spot</label>
-    <input type="text" id="f-location" placeholder="e.g. Lot A-12, Bay 3">
+    <div class="lblrow">
+      <label class="lbl2">Location / spot</label>
+      <button type="button" class="managebtn" id="manageLocBtn">Manage</button>
+    </div>
+    <select id="f-location" class="selectfield"></select>
 
     <label class="lbl2">Notes (optional)</label>
     <textarea id="f-notes" placeholder="Anything the team should know"></textarea>
@@ -137,6 +153,20 @@
       <button class="btn del" id="delBtn" style="display:none">Delete</button>
       <button class="btn cancel" id="cancelBtn">Cancel</button>
       <button class="btn save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="locModal">
+  <div class="sheet">
+    <h3>Manage locations</h3>
+    <div id="locList"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <input type="text" id="newLoc" placeholder="Add a location…" style="flex:1">
+      <button class="btn save" id="addLocBtn" style="flex:0 0 auto;padding:12px 16px">Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn cancel" id="closeLocBtn" style="flex:1">Done</button>
     </div>
   </div>
 </div>
@@ -161,6 +191,23 @@ const statusOf = k => STATUSES.find(s=>s.key===k) || STATUSES[0];
 
 /* Titles used when copying a list out to Slack */
 const LIST_TITLES = { all:"VEHICLE CALL-UPS", call_up:"PRELIMINARY CALL-UPS", leaving:"VEHICLES LEAVING TODAY", gone:"GONE" };
+
+/* Locations — configurable dropdown list (persisted on this device) */
+const LOC_KEY = "callup_locations_v1";
+const DEFAULT_LOCATIONS = ["Front lot","Back lot","Bay 1","Bay 2","Bay 3","Alignment rack"];
+function loadLocations(){ try{ const v=JSON.parse(localStorage.getItem(LOC_KEY)); return Array.isArray(v)?v:DEFAULT_LOCATIONS.slice(); }catch(e){ return DEFAULT_LOCATIONS.slice(); } }
+function saveLocations(){ localStorage.setItem(LOC_KEY, JSON.stringify(locations)); }
+let locations = loadLocations();
+let lastLocationValue = "";
+function renderLocationSelect(current){
+  const sel=document.getElementById("f-location"); const cur=current||"";
+  const list=locations.slice();
+  if(cur && !list.includes(cur)) list.push(cur); // keep an existing custom value visible
+  let opts=`<option value="">— none —</option>`;
+  opts+=list.map(l=>`<option value="${esc(l)}"${l===cur?" selected":""}>${esc(l)}</option>`).join("");
+  opts+=`<option value="__add__">+ Add new location…</option>`;
+  sel.innerHTML=opts; sel.value=cur; lastLocationValue=cur;
+}
 
 /* ============================================================
    DATA STORE — Local (Preview) or Supabase (Live) behind one interface
@@ -257,7 +304,7 @@ function openModal(v){
   document.getElementById("f-eta").value=v?.eta||"";
   document.getElementById("f-name").value=v?.name||"";
   document.getElementById("f-vehicle").value=v?.vehicle||"";
-  document.getElementById("f-location").value=v?.location||"";
+  renderLocationSelect(v?.location||"");
   document.getElementById("f-notes").value=v?.notes||"";
   selectedStatus=v?.status||STATUSES[0].key;
   renderStatusGrid();
@@ -287,6 +334,7 @@ document.getElementById("saveBtn").onclick=async()=>{
     vehicle:val("f-vehicle"), location:val("f-location"), notes:val("f-notes"),
     status:selectedStatus,
   };
+  if(v.location==="__add__") v.location="";
   if(!v.name && !v.tag){ document.getElementById("f-tag").focus(); return; }
   await store.save(v); closeModal(); toast("Saved ✓");
   if(!store.live) refresh();
@@ -297,6 +345,35 @@ document.getElementById("delBtn").onclick=async()=>{
   await store.remove(editing.id); closeModal(); toast("Removed");
   if(!store.live) refresh();
 };
+
+/* location dropdown: "+ Add new location…" inline, and the Manage modal */
+const locSelect=document.getElementById("f-location");
+locSelect.onchange=()=>{
+  if(locSelect.value==="__add__"){
+    const name=(prompt("New location name:")||"").trim();
+    if(name){ if(!locations.includes(name)){ locations.push(name); saveLocations(); } renderLocationSelect(name); }
+    else { renderLocationSelect(lastLocationValue); }
+  } else { lastLocationValue=locSelect.value; }
+};
+
+const locModal=document.getElementById("locModal");
+document.getElementById("manageLocBtn").onclick=()=>{ renderLocList(); locModal.classList.add("show"); };
+function closeLocModal(){ locModal.classList.remove("show"); renderLocationSelect(lastLocationValue); }
+document.getElementById("closeLocBtn").onclick=closeLocModal;
+locModal.onclick=e=>{ if(e.target===locModal) closeLocModal(); };
+document.getElementById("addLocBtn").onclick=()=>{
+  const inp=document.getElementById("newLoc"); const name=inp.value.trim();
+  if(!name) return;
+  if(!locations.includes(name)) locations.push(name);
+  saveLocations(); inp.value=""; renderLocList();
+};
+document.getElementById("newLoc").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("addLocBtn").click(); } });
+function renderLocList(){
+  const el=document.getElementById("locList");
+  if(!locations.length){ el.innerHTML=`<div class="locempty">No locations yet. Add one below.</div>`; return; }
+  el.innerHTML=locations.map((l,i)=>`<div class="locrow"><span>${esc(l)}</span><button class="x" data-i="${i}" title="Remove">×</button></div>`).join("");
+  el.querySelectorAll(".x").forEach(b=>b.onclick=()=>{ locations.splice(+b.dataset.i,1); saveLocations(); renderLocList(); });
+}
 
 /* Copy current list as a Slack-ready message: Name / Vehicle / #Tag / Time */
 document.getElementById("copyBtn").onclick=async(e)=>{
