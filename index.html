@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicle Board</title>
+<style>
+  :root{
+    --bg:#0f1420; --panel:#171d2b; --panel-2:#1e2637; --line:#2a3244;
+    --text:#e8ecf4; --muted:#8a93a6; --accent:#3b82f6; --accent-soft:#1d3a63;
+    --good:#22c55e; --warn:#f59e0b; --danger:#ef4444; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
+    padding:0 0 96px;
+  }
+  header{
+    position:sticky;top:0;z-index:10;
+    background:rgba(15,20,32,.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:14px 18px;
+  }
+  .htop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  header h1{margin:0;font-size:18px;font-weight:700}
+  .count{font-size:13px;color:var(--muted);margin-top:2px}
+  .banner{
+    margin-top:10px;padding:9px 12px;border-radius:10px;font-size:12.5px;line-height:1.4;
+    background:#3a2a12;border:1px solid #5c431c;color:#f6c877;display:none;
+  }
+  .banner.show{display:block}
+  .wrap{max-width:760px;margin:0 auto;padding:16px}
+
+  /* filter chips */
+  .filters{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+  .chip{
+    flex:none;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:600;
+    background:var(--panel-2);border:1.5px solid var(--line);color:var(--muted);cursor:pointer;white-space:nowrap;
+  }
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .cards{display:flex;flex-direction:column;gap:12px}
+  .veh{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 14px 12px;cursor:pointer;transition:.12s;border-left:4px solid var(--line);
+  }
+  .veh:active{transform:scale(.995)}
+  .veh .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+  .veh .name{font-size:16px;font-weight:700;line-height:1.25}
+  .pill{
+    flex:none;padding:4px 10px;border-radius:99px;font-size:11.5px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;
+  }
+  .meta{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:13.5px}
+  .meta .m{display:flex;align-items:center;gap:6px;color:var(--text)}
+  .meta .lbl{color:var(--muted);font-size:12px}
+  .veh .foot{margin-top:9px;font-size:11.5px;color:var(--muted)}
+  .empty{text-align:center;color:var(--muted);padding:48px 20px;font-size:14px;line-height:1.5}
+
+  /* add button */
+  .fab{
+    position:fixed;right:18px;bottom:20px;z-index:20;
+    background:var(--accent);color:#fff;border:none;border-radius:99px;
+    padding:15px 22px;font-size:15px;font-weight:700;cursor:pointer;
+    box-shadow:0 8px 24px rgba(59,130,246,.45);
+  }
+  .fab:active{transform:scale(.97)}
+
+  /* modal */
+  .modal{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center}
+  .modal.show{display:flex}
+  .sheet{
+    background:var(--panel);width:100%;max-width:760px;border-radius:16px 16px 0 0;
+    border:1px solid var(--line);padding:18px;max-height:90vh;overflow:auto;
+  }
+  .sheet h3{margin:0 0 14px;font-size:16px}
+  label.lbl2{display:block;font-size:12.5px;color:var(--muted);margin:14px 0 6px;font-weight:600}
+  label.lbl2:first-of-type{margin-top:0}
+  input[type=text],textarea{
+    width:100%;background:var(--panel-2);border:1.5px solid var(--line);border-radius:10px;
+    color:var(--text);font-size:16px;padding:12px 14px;font-family:inherit;outline:none;
+  }
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:56px}
+  .statusgrid{display:flex;flex-wrap:wrap;gap:8px}
+  .sbtn{
+    padding:11px 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--panel-2);
+    color:var(--text);font-size:14px;font-weight:600;cursor:pointer;flex:1 1 auto;min-width:120px;text-align:center;
+  }
+  .sbtn.sel{color:#fff;border-color:transparent}
+  .modal-actions{display:flex;gap:10px;margin-top:20px}
+  button.btn{border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;flex:1}
+  .btn.save{background:var(--accent);color:#fff}
+  .btn.del{background:transparent;color:var(--danger);border:1.5px solid var(--danger)!important;flex:0 0 auto;padding:14px 18px}
+  .btn.cancel{background:var(--panel-2);color:var(--text);border:1.5px solid var(--line)!important;flex:0 0 auto;padding:14px 18px}
+  .toast{
+    position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+    background:var(--good);color:#04210f;padding:10px 18px;border-radius:99px;
+    font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:40;
+  }
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="htop">
+    <div>
+      <h1>Vehicle Board</h1>
+      <div class="count" id="count">Loading…</div>
+    </div>
+  </div>
+  <div class="banner" id="banner"></div>
+</header>
+
+<div class="wrap">
+  <div class="filters" id="filters"></div>
+  <div class="cards" id="cards"></div>
+</div>
+
+<button class="fab" id="addBtn">+ Add vehicle</button>
+
+<!-- edit / add modal -->
+<div class="modal" id="modal">
+  <div class="sheet">
+    <h3 id="sheetTitle">Add vehicle</h3>
+
+    <label class="lbl2">Vehicle</label>
+    <input type="text" id="f-name" placeholder="e.g. Silver Tahoe — Smith (RO 4821)">
+
+    <label class="lbl2">Status</label>
+    <div class="statusgrid" id="statusGrid"></div>
+
+    <label class="lbl2">Location / spot</label>
+    <input type="text" id="f-location" placeholder="e.g. Bay 3, Lot A-12, Alignment rack">
+
+    <label class="lbl2">ETA</label>
+    <input type="text" id="f-eta" placeholder="e.g. Today 4:00 PM, Waiting on parts">
+
+    <label class="lbl2">Notes (optional)</label>
+    <textarea id="f-notes" placeholder="Anything the team should know"></textarea>
+
+    <div class="modal-actions">
+      <button class="btn del" id="delBtn" style="display:none">Delete</button>
+      <button class="btn cancel" id="cancelBtn">Cancel</button>
+      <button class="btn save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved ✓</div>
+
+<script>
+/* ============================================================
+   CONFIG — paste your Supabase values here to turn on live sync.
+   Until then, the app runs in on-device Preview mode.
+   ============================================================ */
+const SUPABASE_URL = "";       // e.g. https://abcxyz.supabase.co
+const SUPABASE_ANON_KEY = "";  // the "anon public" key (safe to be public)
+
+/* Status options — label + color */
+const STATUSES = [
+  { key:"checked_in", label:"Checked in",   color:"#3b82f6" },
+  { key:"in_bay",     label:"In bay",       color:"#8b5cf6" },
+  { key:"waiting",    label:"Waiting parts",color:"#f59e0b" },
+  { key:"road_test",  label:"Road test",    color:"#06b6d4" },
+  { key:"ready",      label:"Ready",        color:"#22c55e" },
+  { key:"picked_up",  label:"Picked up",    color:"#6b7280" },
+];
+const statusOf = k => STATUSES.find(s=>s.key===k) || STATUSES[0];
+
+/* ============================================================
+   DATA STORE — two backends behind one interface.
+   Local (Preview) uses localStorage; Live uses Supabase.
+   ============================================================ */
+const LIVE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+let store;
+
+function localStore(){
+  const KEY = "vehicle_board_v1";
+  const read = () => { try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } };
+  const write = arr => localStorage.setItem(KEY, JSON.stringify(arr));
+  let cb = ()=>{};
+  window.addEventListener("storage", e=>{ if(e.key===KEY) cb(); });
+  return {
+    live:false,
+    async list(){ return read().sort((a,b)=> (b.updated_at||"").localeCompare(a.updated_at||"")); },
+    async save(v){
+      const arr = read();
+      const now = new Date().toISOString();
+      if(v.id){ const i = arr.findIndex(x=>x.id===v.id); if(i>=0) arr[i] = {...v, updated_at:now}; }
+      else { arr.push({...v, id:crypto.randomUUID(), updated_at:now}); }
+      write(arr); cb();
+    },
+    async remove(id){ write(read().filter(x=>x.id!==id)); cb(); },
+    onChange(fn){ cb = fn; },
+  };
+}
+
+function supabaseStore(){
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const TABLE = "vehicles";
+  let cb = ()=>{};
+  sb.channel("vehicles-rt")
+    .on("postgres_changes", { event:"*", schema:"public", table:TABLE }, ()=>cb())
+    .subscribe();
+  return {
+    live:true,
+    async list(){
+      const { data, error } = await sb.from(TABLE).select("*").order("updated_at",{ascending:false});
+      if(error){ console.error(error); return []; }
+      return data;
+    },
+    async save(v){
+      const row = { name:v.name, status:v.status, location:v.location, eta:v.eta, notes:v.notes, updated_at:new Date().toISOString() };
+      if(v.id){ await sb.from(TABLE).update(row).eq("id", v.id); }
+      else { await sb.from(TABLE).insert(row); }
+    },
+    async remove(id){ await sb.from(TABLE).delete().eq("id", id); },
+    onChange(fn){ cb = fn; },
+  };
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+let vehicles = [];
+let activeFilter = "all";
+let editing = null; // current vehicle in modal, or null for new
+
+async function refresh(){
+  vehicles = await store.list();
+  render();
+}
+
+function render(){
+  renderFilters();
+  renderCards();
+  const n = vehicles.filter(v=>v.status!=="picked_up").length;
+  document.getElementById("count").textContent =
+    `${n} active vehicle${n===1?"":"s"}` + (store.live ? " · live" : " · preview (this device only)");
+}
+
+function renderFilters(){
+  const el = document.getElementById("filters");
+  const counts = {};
+  vehicles.forEach(v=> counts[v.status]=(counts[v.status]||0)+1 );
+  const chips = [["all",`All (${vehicles.length})`]]
+    .concat(STATUSES.map(s=>[s.key, `${s.label} (${counts[s.key]||0})`]));
+  el.innerHTML = chips.map(([k,label])=>
+    `<div class="chip ${activeFilter===k?'active':''}" data-f="${k}">${label}</div>`).join("");
+  el.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ activeFilter=c.dataset.f; render(); });
+}
+
+function renderCards(){
+  const el = document.getElementById("cards");
+  let list = vehicles;
+  if(activeFilter!=="all") list = list.filter(v=>v.status===activeFilter);
+  if(!list.length){
+    el.innerHTML = `<div class="empty">No vehicles here yet.<br>Tap <b>+ Add vehicle</b> to put one on the board.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(v=>{
+    const s = statusOf(v.status);
+    return `<div class="veh" data-id="${v.id}" style="border-left-color:${s.color}">
+      <div class="top">
+        <div class="name">${esc(v.name)||"(no name)"}</div>
+        <span class="pill" style="background:${s.color}22;color:${s.color}">${s.label}</span>
+      </div>
+      <div class="meta">
+        <div class="m"><span class="lbl">📍</span> ${esc(v.location)||"—"}</div>
+        <div class="m"><span class="lbl">🕒 ETA</span> ${esc(v.eta)||"—"}</div>
+      </div>
+      ${v.notes?`<div class="foot">📝 ${esc(v.notes)}</div>`:""}
+      <div class="foot">Updated ${timeAgo(v.updated_at)}</div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".veh").forEach(card=>{
+    card.onclick = ()=> openModal(vehicles.find(x=>x.id===card.dataset.id));
+  });
+}
+
+/* modal */
+const modal = document.getElementById("modal");
+function openModal(v){
+  editing = v || null;
+  document.getElementById("sheetTitle").textContent = v ? "Edit vehicle" : "Add vehicle";
+  document.getElementById("f-name").value = v?.name || "";
+  document.getElementById("f-location").value = v?.location || "";
+  document.getElementById("f-eta").value = v?.eta || "";
+  document.getElementById("f-notes").value = v?.notes || "";
+  selectedStatus = v?.status || STATUSES[0].key;
+  renderStatusGrid();
+  document.getElementById("delBtn").style.display = v ? "block" : "none";
+  modal.classList.add("show");
+  if(!v) setTimeout(()=>document.getElementById("f-name").focus(), 50);
+}
+function closeModal(){ modal.classList.remove("show"); editing=null; }
+
+let selectedStatus = STATUSES[0].key;
+function renderStatusGrid(){
+  const el = document.getElementById("statusGrid");
+  el.innerHTML = STATUSES.map(s=>{
+    const sel = s.key===selectedStatus;
+    return `<div class="sbtn ${sel?'sel':''}" data-s="${s.key}" style="${sel?`background:${s.color}`:''}">${s.label}</div>`;
+  }).join("");
+  el.querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{ selectedStatus=b.dataset.s; renderStatusGrid(); });
+}
+
+document.getElementById("addBtn").onclick = ()=>openModal(null);
+document.getElementById("cancelBtn").onclick = closeModal;
+modal.onclick = e=>{ if(e.target===modal) closeModal(); };
+
+document.getElementById("saveBtn").onclick = async ()=>{
+  const v = {
+    id: editing?.id,
+    name: document.getElementById("f-name").value.trim(),
+    status: selectedStatus,
+    location: document.getElementById("f-location").value.trim(),
+    eta: document.getElementById("f-eta").value.trim(),
+    notes: document.getElementById("f-notes").value.trim(),
+  };
+  if(!v.name){ document.getElementById("f-name").focus(); return; }
+  await store.save(v);
+  closeModal(); toast("Saved ✓");
+  if(!store.live) refresh(); // live mode refreshes via realtime
+};
+
+document.getElementById("delBtn").onclick = async ()=>{
+  if(!editing) return;
+  if(!confirm("Remove this vehicle from the board?")) return;
+  await store.remove(editing.id);
+  closeModal(); toast("Removed");
+  if(!store.live) refresh();
+};
+
+/* helpers */
+function esc(s){ return (s||"").replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function timeAgo(iso){
+  if(!iso) return "just now";
+  const d = (Date.now()-new Date(iso))/1000;
+  if(d<60) return "just now";
+  if(d<3600) return Math.floor(d/60)+" min ago";
+  if(d<86400) return Math.floor(d/3600)+" hr ago";
+  return new Date(iso).toLocaleDateString();
+}
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1500);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+function boot(){
+  store = LIVE ? supabaseStore() : localStore();
+  store.onChange(refresh);
+  if(!LIVE){
+    const b=document.getElementById("banner");
+    b.className="banner show";
+    b.innerHTML="⚠️ <b>Preview mode.</b> Vehicles are saved only on this device and are not shared with your team yet. Send your developer the two Supabase values to turn on live sync.";
+  }
+  refresh();
+}
+
+if(LIVE){
+  // load the Supabase client library, then boot
+  const s=document.createElement("script");
+  s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+  s.onload=boot;
+  s.onerror=()=>{ document.getElementById("count").textContent="Could not load sync library"; };
+  document.head.appendChild(s);
+}else{
+  boot();
+}
+</script>
+</body>
+</html>
