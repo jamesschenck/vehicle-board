@@ -34,11 +34,6 @@
   .banner.show{display:block}
   .wrap{max-width:760px;margin:0 auto;padding:16px}
 
-  .filters{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;margin-bottom:12px;-webkit-overflow-scrolling:touch}
-  .chip{flex:none;padding:8px 14px;border-radius:99px;font-size:13px;font-weight:600;
-    background:var(--panel-2);border:1.5px solid var(--line);color:var(--muted);cursor:pointer;white-space:nowrap}
-  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
-
   .cards{display:flex;flex-direction:column;gap:12px}
   .veh{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
     padding:14px 14px 12px;cursor:pointer;transition:.12s;border-left:4px solid var(--line)}
@@ -103,7 +98,6 @@
 </header>
 
 <div class="wrap">
-  <div class="filters" id="filters"></div>
   <div class="cards" id="cards"></div>
 </div>
 
@@ -221,18 +215,10 @@ const filtered = () => activeFilter==="all" ? vehicles : vehicles.filter(v=>v.st
 async function refresh(){ vehicles=await store.list(); render(); }
 
 function render(){
-  renderFilters(); renderCards();
+  renderCards();
   const n=vehicles.filter(v=>v.status!=="gone").length;
   document.getElementById("count").textContent =
     `${n} active` + (store.live ? " · live" : " · preview (this device only)");
-}
-
-function renderFilters(){
-  const el=document.getElementById("filters"), counts={};
-  vehicles.forEach(v=>counts[v.status]=(counts[v.status]||0)+1);
-  const chips=[["all",`All (${vehicles.length})`]].concat(STATUSES.map(s=>[s.key,`${s.label} (${counts[s.key]||0})`]));
-  el.innerHTML=chips.map(([k,l])=>`<div class="chip ${activeFilter===k?'active':''}" data-f="${k}">${l}</div>`).join("");
-  el.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{activeFilter=c.dataset.f;render();});
 }
 
 function renderCards(){
