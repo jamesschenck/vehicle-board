@@ -7,42 +7,45 @@
 <style>
   :root{
     --bg:#0f1420; --panel:#171d2b; --panel-2:#1e2637; --line:#2a3244;
-    --text:#e8ecf4; --muted:#8a93a6; --accent:#3b82f6;
-    --good:#22c55e; --danger:#ef4444; --radius:14px;
+    --text:#e8ecf4; --muted:#8a93a6; --accent:#3b82f6; --accent-soft:#1d3a63;
+    --good:#22c55e; --warn:#f59e0b; --danger:#ef4444; --radius:14px;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; padding:0 0 96px;
-  }
-  header{
-    position:sticky;top:0;z-index:10;background:rgba(15,20,32,.92);backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--line); padding:14px 18px;
-  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased; padding:0 0 96px}
+  header{position:sticky;top:0;z-index:10;background:rgba(15,20,32,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:14px 18px}
   .htop{display:flex;align-items:center;justify-content:space-between;gap:10px}
   header h1{margin:0;font-size:18px;font-weight:700}
   .count{font-size:13px;color:var(--muted);margin-top:2px}
-  .copybtn{
-    flex:none;background:var(--panel-2);border:1.5px solid var(--line);color:var(--text);
-    padding:9px 13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;
-  }
-  .copybtn:active{transform:scale(.97)}
-  .copybtn.done{background:var(--good);color:#04210f;border-color:var(--good)}
+  .hbtns{display:flex;gap:8px;align-items:center;flex:none}
+  .hbtn{background:var(--panel-2);border:1.5px solid var(--line);color:var(--text);
+    padding:9px 13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .hbtn:active{transform:scale(.97)}
+  .hbtn.done{background:var(--good);color:#04210f;border-color:var(--good)}
+  .hbtn.who{background:var(--accent-soft);color:#9cc2ff;border-color:transparent}
   .banner{margin-top:10px;padding:9px 12px;border-radius:10px;font-size:12.5px;line-height:1.4;
     background:#3a2a12;border:1px solid #5c431c;color:#f6c877;display:none}
   .banner.show{display:block}
-  .wrap{max-width:760px;margin:0 auto;padding:16px}
+  .alertbar{margin-top:10px;padding:12px 14px;border-radius:10px;font-size:14px;font-weight:700;
+    background:var(--accent);color:#fff;display:none;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.4)}
+  .alertbar.show{display:block;animation:pop .25s ease}
+  @keyframes pop{from{transform:scale(.97);opacity:.5}to{transform:scale(1);opacity:1}}
 
+  .wrap{max-width:760px;margin:0 auto;padding:16px}
+  .secttitle{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:4px 0 10px}
+  .secttitle.spaced{margin-top:22px}
   .cards{display:flex;flex-direction:column;gap:12px}
+
   .veh{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    padding:14px 14px 12px;cursor:pointer;transition:.12s;border-left:4px solid var(--line)}
-  .veh:active{transform:scale(.995)}
+    padding:14px 14px 12px;transition:.12s;border-left:4px solid var(--line)}
+  .veh[data-edit]{cursor:pointer}
+  .veh[data-edit]:active{transform:scale(.995)}
   .veh.gone{opacity:.55}
   .veh .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
   .idline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .tag{background:var(--accent-soft,#1d3a63);color:#9cc2ff;font-weight:800;font-size:13px;
-    padding:3px 9px;border-radius:8px;letter-spacing:.3px}
+  .tag{background:var(--accent-soft);color:#9cc2ff;font-weight:800;font-size:13px;padding:3px 9px;border-radius:8px;letter-spacing:.3px}
   .name{font-size:16px;font-weight:700;line-height:1.2}
   .vehmodel{font-size:14px;color:var(--muted);margin-top:3px}
   .pill{flex:none;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:700;
@@ -51,7 +54,25 @@
   .meta .m{display:flex;align-items:center;gap:6px}
   .meta .lbl{color:var(--muted);font-size:12px}
   .veh .foot{margin-top:9px;font-size:11.5px;color:var(--muted)}
-  .empty{text-align:center;color:var(--muted);padding:48px 20px;font-size:14px;line-height:1.5}
+  .empty{text-align:center;color:var(--muted);padding:36px 20px;font-size:14px;line-height:1.5;
+    background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius)}
+
+  /* request UI */
+  .reqrow{display:flex;gap:8px;margin-top:11px;align-items:center}
+  .reqbtn{flex:1;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer}
+  .reqbtn:active{transform:scale(.98)}
+  .reqbtn.pull{background:var(--accent-soft);color:#9cc2ff}
+  .reqbtn.guest{background:#3a2a12;color:#f6c877}
+  .reqbtn.onitbtn{background:var(--accent);color:#fff}
+  .reqbtn.donebtn{background:var(--good);color:#04210f;flex:0 0 auto;padding:11px 20px}
+  .reqbtn.ghost{flex:0 0 auto;background:transparent;border:1.5px solid var(--line);color:var(--muted);padding:9px 13px;font-size:13px}
+  .reqstrip{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;
+    padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:700}
+  .reqstrip.requested{background:#3a2a12;color:#f6c877}
+  .reqstrip.on_it{background:#12314a;color:#7cc4ff}
+  .reqstrip.done{background:#0f2f1c;color:#6ee7a0}
+  .whoon{font-size:13.5px;color:#7cc4ff;font-weight:700;align-self:center;margin-right:auto}
+  .qcard{border-left-color:var(--warn)!important}
 
   .fab{position:fixed;right:18px;bottom:20px;z-index:20;background:var(--accent);color:#fff;border:none;
     border-radius:99px;padding:15px 22px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(59,130,246,.45)}
@@ -61,7 +82,8 @@
   .modal.show{display:flex}
   .sheet{background:var(--panel);width:100%;max-width:760px;border-radius:16px 16px 0 0;
     border:1px solid var(--line);padding:18px;max-height:92vh;overflow:auto}
-  .sheet h3{margin:0 0 14px;font-size:16px}
+  .sheet h3{margin:0 0 6px;font-size:16px}
+  .sheet .sub{margin:0 0 14px;font-size:13px;color:var(--muted)}
   .rowflex{display:flex;gap:10px}
   .rowflex > div{flex:1}
   label.lbl2{display:block;font-size:12.5px;color:var(--muted);margin:14px 0 6px;font-weight:600}
@@ -92,7 +114,6 @@
   .btn.save{background:var(--accent);color:#fff}
   .btn.del{background:transparent;color:var(--danger);border:1.5px solid var(--danger)!important;flex:0 0 auto;padding:14px 18px}
   .btn.cancel{background:var(--panel-2);color:var(--text);border:1.5px solid var(--line)!important;flex:0 0 auto;padding:14px 18px}
-
   .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--good);color:#04210f;
     padding:10px 18px;border-radius:99px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:40}
   .toast.show{opacity:1}
@@ -105,50 +126,47 @@
       <h1>Call-Up Board</h1>
       <div class="count" id="count">Loading…</div>
     </div>
-    <button class="copybtn" id="copyBtn">Copy list</button>
+    <div class="hbtns">
+      <button class="hbtn" id="copyBtn">Copy list</button>
+      <button class="hbtn who" id="whoBtn">Set name</button>
+    </div>
   </div>
   <div class="banner" id="banner"></div>
+  <div class="alertbar" id="alertbar"></div>
 </header>
 
 <div class="wrap">
+  <div id="queueSection" style="display:none">
+    <div class="secttitle" id="queueTitle">Active requests</div>
+    <div class="cards" id="queue"></div>
+    <div class="secttitle spaced">All vehicles</div>
+  </div>
   <div class="cards" id="cards"></div>
 </div>
 
 <button class="fab" id="addBtn">+ Add vehicle</button>
 
+<!-- vehicle add/edit -->
 <div class="modal" id="modal">
   <div class="sheet">
     <h3 id="sheetTitle">Add vehicle</h3>
-
     <div class="rowflex">
-      <div>
-        <label class="lbl2">Tag #</label>
-        <input type="text" id="f-tag" placeholder="T37 / #50">
-      </div>
-      <div>
-        <label class="lbl2">Time</label>
-        <input type="text" id="f-eta" placeholder="8am / 4p">
-      </div>
+      <div><label class="lbl2">Tag #</label><input type="text" id="f-tag" placeholder="T37 / #50"></div>
+      <div><label class="lbl2">Time</label><input type="text" id="f-eta" placeholder="8am / 4p"></div>
     </div>
-
     <label class="lbl2">Name</label>
     <input type="text" id="f-name" placeholder="Customer last name">
-
     <label class="lbl2">Vehicle</label>
     <input type="text" id="f-vehicle" placeholder="e.g. Honda Civic">
-
     <label class="lbl2">Status</label>
     <div class="statusgrid" id="statusGrid"></div>
-
     <div class="lblrow">
       <label class="lbl2">Location / spot</label>
       <button type="button" class="managebtn" id="manageLocBtn">Manage</button>
     </div>
     <select id="f-location" class="selectfield"></select>
-
     <label class="lbl2">Notes (optional)</label>
     <textarea id="f-notes" placeholder="Anything the team should know"></textarea>
-
     <div class="modal-actions">
       <button class="btn del" id="delBtn" style="display:none">Delete</button>
       <button class="btn cancel" id="cancelBtn">Cancel</button>
@@ -157,6 +175,7 @@
   </div>
 </div>
 
+<!-- manage locations -->
 <div class="modal" id="locModal">
   <div class="sheet">
     <h3>Manage locations</h3>
@@ -165,9 +184,20 @@
       <input type="text" id="newLoc" placeholder="Add a location…" style="flex:1">
       <button class="btn save" id="addLocBtn" style="flex:0 0 auto;padding:12px 16px">Add</button>
     </div>
-    <div class="modal-actions">
-      <button class="btn cancel" id="closeLocBtn" style="flex:1">Done</button>
-    </div>
+    <div class="modal-actions"><button class="btn cancel" id="closeLocBtn" style="flex:1">Done</button></div>
+  </div>
+</div>
+
+<!-- who are you -->
+<div class="modal" id="idModal">
+  <div class="sheet">
+    <h3>Who are you?</h3>
+    <p class="sub">Your name shows on the board so everyone knows who's asking and who's on it.</p>
+    <label class="lbl2">Your name</label>
+    <input type="text" id="me-name" placeholder="e.g. Elaine">
+    <label class="lbl2">Your role</label>
+    <div class="statusgrid" id="roleGrid"></div>
+    <div class="modal-actions"><button class="btn save" id="meSaveBtn" style="flex:1">Continue</button></div>
   </div>
 </div>
 
@@ -175,127 +205,268 @@
 
 <script>
 /* ============================================================
-   CONFIG — paste your Supabase values here to turn on live sync.
-   Until then, the app runs in on-device Preview mode.
+   CONFIG — paste Supabase values to turn on live team sync.
+   The request/response loop needs this to work between people.
    ============================================================ */
-const SUPABASE_URL = "";       // e.g. https://abcxyz.supabase.co
-const SUPABASE_ANON_KEY = "";  // the "anon public" key (safe to be public)
+const SUPABASE_URL = "";
+const SUPABASE_ANON_KEY = "";
 
-/* Status stages — matches your Slack lists */
 const STATUSES = [
-  { key:"call_up",  label:"Call-up",       color:"#3b82f6" },
-  { key:"leaving",  label:"Leaving today", color:"#22c55e" },
-  { key:"gone",     label:"Gone",          color:"#6b7280" },
+  { key:"call_up", label:"Call-up",       color:"#3b82f6" },
+  { key:"leaving", label:"Leaving today", color:"#22c55e" },
+  { key:"gone",    label:"Gone",          color:"#6b7280" },
 ];
 const statusOf = k => STATUSES.find(s=>s.key===k) || STATUSES[0];
 
-/* Titles used when copying a list out to Slack */
-const LIST_TITLES = { all:"VEHICLE CALL-UPS", call_up:"PRELIMINARY CALL-UPS", leaving:"VEHICLES LEAVING TODAY", gone:"GONE" };
+/* request types an advisor can send */
+const REQ = {
+  pull_up:{ short:"Pull-up", icon:"🚗" },
+  guest:  { short:"Guest arriving", icon:"🧍" },
+};
 
-/* Locations — configurable dropdown list (persisted on this device) */
-const LOC_KEY = "callup_locations_v1";
-const DEFAULT_LOCATIONS = ["Front lot","Back lot","Bay 1","Bay 2","Bay 3","Alignment rack"];
+/* Locations — configurable dropdown (persisted on this device) */
+const LOC_KEY="callup_locations_v1";
+const DEFAULT_LOCATIONS=["Front lot","Back lot","Bay 1","Bay 2","Bay 3","Alignment rack"];
 function loadLocations(){ try{ const v=JSON.parse(localStorage.getItem(LOC_KEY)); return Array.isArray(v)?v:DEFAULT_LOCATIONS.slice(); }catch(e){ return DEFAULT_LOCATIONS.slice(); } }
 function saveLocations(){ localStorage.setItem(LOC_KEY, JSON.stringify(locations)); }
-let locations = loadLocations();
-let lastLocationValue = "";
+let locations=loadLocations(), lastLocationValue="";
 function renderLocationSelect(current){
-  const sel=document.getElementById("f-location"); const cur=current||"";
-  const list=locations.slice();
-  if(cur && !list.includes(cur)) list.push(cur); // keep an existing custom value visible
+  const sel=document.getElementById("f-location"); const cur=current||""; const list=locations.slice();
+  if(cur && !list.includes(cur)) list.push(cur);
   let opts=`<option value="">— none —</option>`;
   opts+=list.map(l=>`<option value="${esc(l)}"${l===cur?" selected":""}>${esc(l)}</option>`).join("");
   opts+=`<option value="__add__">+ Add new location…</option>`;
   sel.innerHTML=opts; sel.value=cur; lastLocationValue=cur;
 }
 
-/* ============================================================
-   DATA STORE — Local (Preview) or Supabase (Live) behind one interface
-   ============================================================ */
+/* ============================================================ STORE ============================================================ */
 const LIVE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 let store;
+const REQ_FIELDS = ["req_type","req_state","req_by","req_claimed_by","req_at","req_updated"];
 
 function localStore(){
-  const KEY = "callup_board_v1";
-  const read = () => { try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } };
-  const write = arr => localStorage.setItem(KEY, JSON.stringify(arr));
-  let cb = ()=>{};
+  const KEY="callup_board_v1";
+  const read=()=>{ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return []; } };
+  const write=a=>localStorage.setItem(KEY, JSON.stringify(a));
+  let cb=()=>{};
   window.addEventListener("storage", e=>{ if(e.key===KEY) cb(); });
   return {
     live:false,
     async list(){ return read().sort((a,b)=>(b.updated_at||"").localeCompare(a.updated_at||"")); },
-    async save(v){
-      const arr=read(), now=new Date().toISOString();
-      if(v.id){ const i=arr.findIndex(x=>x.id===v.id); if(i>=0) arr[i]={...v,updated_at:now}; }
-      else { arr.push({...v, id:crypto.randomUUID(), updated_at:now}); }
-      write(arr); cb();
-    },
+    async save(v){ const a=read(), now=new Date().toISOString();
+      if(v.id){ const i=a.findIndex(x=>x.id===v.id); if(i>=0) a[i]={...v,updated_at:now}; }
+      else { a.push({...v, id:crypto.randomUUID(), updated_at:now}); }
+      write(a); cb(); },
     async remove(id){ write(read().filter(x=>x.id!==id)); cb(); },
     onChange(fn){ cb=fn; },
   };
 }
-
 function supabaseStore(){
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const TABLE="vehicles"; let cb=()=>{};
   sb.channel("veh-rt").on("postgres_changes",{event:"*",schema:"public",table:TABLE},()=>cb()).subscribe();
   return {
     live:true,
-    async list(){
-      const {data,error}=await sb.from(TABLE).select("*").order("updated_at",{ascending:false});
-      if(error){ console.error(error); return []; } return data;
-    },
+    async list(){ const {data,error}=await sb.from(TABLE).select("*").order("updated_at",{ascending:false});
+      if(error){ console.error(error); return []; } return data; },
     async save(v){
-      const row={ tag:v.tag, name:v.name, vehicle:v.vehicle, status:v.status, location:v.location, eta:v.eta, notes:v.notes, updated_at:new Date().toISOString() };
-      if(v.id){ await sb.from(TABLE).update(row).eq("id",v.id); } else { await sb.from(TABLE).insert(row); }
-    },
+      const row={ tag:v.tag,name:v.name,vehicle:v.vehicle,status:v.status,location:v.location,eta:v.eta,notes:v.notes,updated_at:new Date().toISOString() };
+      REQ_FIELDS.forEach(f=> row[f]=v[f]??null);
+      if(v.id){ await sb.from(TABLE).update(row).eq("id",v.id); } else { await sb.from(TABLE).insert(row); } },
     async remove(id){ await sb.from(TABLE).delete().eq("id",id); },
     onChange(fn){ cb=fn; },
   };
 }
 
-/* ============================================================ UI ============================================================ */
-let vehicles=[], activeFilter="all", editing=null, selectedStatus=STATUSES[0].key;
+/* ============================================================ IDENTITY ============================================================ */
+const ME_KEY="callup_me_v1";
+let me=(function(){ try{ return JSON.parse(localStorage.getItem(ME_KEY))||null; }catch(e){ return null; } })();
+let meRole=me?.role||"advisor";
+const idModal=document.getElementById("idModal");
+function openIdModal(){ document.getElementById("me-name").value=me?.name||""; meRole=me?.role||"advisor"; renderRoleGrid(); idModal.classList.add("show"); setTimeout(()=>document.getElementById("me-name").focus(),50); }
+function renderRoleGrid(){
+  const el=document.getElementById("roleGrid");
+  const roles=[["advisor","Service Advisor"],["assistant","Shop Assistant"]];
+  el.innerHTML=roles.map(([k,l])=>`<div class="sbtn ${meRole===k?'sel':''}" data-r="${k}" style="${meRole===k?'background:var(--accent)':''}">${l}</div>`).join("");
+  el.querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{ meRole=b.dataset.r; renderRoleGrid(); });
+}
+document.getElementById("meSaveBtn").onclick=()=>{
+  const name=document.getElementById("me-name").value.trim();
+  if(!name){ document.getElementById("me-name").focus(); return; }
+  me={name, role:meRole}; localStorage.setItem(ME_KEY, JSON.stringify(me));
+  idModal.classList.remove("show"); firstLoad=true; refresh();
+};
+document.getElementById("whoBtn").onclick=openIdModal;
+idModal.onclick=e=>{ if(e.target===idModal && me) idModal.classList.remove("show"); };
 
-const filtered = () => activeFilter==="all" ? vehicles : vehicles.filter(v=>v.status===activeFilter);
+/* ============================================================ ALERTS ============================================================ */
+let audioCtx=null;
+document.addEventListener("click",()=>{ if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(audioCtx&&audioCtx.state==="suspended") audioCtx.resume(); });
+function beep(){
+  if(!audioCtx) return;
+  const t=audioCtx.currentTime;
+  [[880,0],[1180,0.16]].forEach(([f,dt])=>{
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type="sine"; o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.0001,t+dt); g.gain.exponentialRampToValueAtTime(0.3,t+dt+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dt+0.4);
+    o.start(t+dt); o.stop(t+dt+0.42);
+  });
+}
+let alertTimer;
+function notify(msg){
+  const el=document.getElementById("alertbar"); el.textContent=msg; el.classList.add("show");
+  clearTimeout(alertTimer); alertTimer=setTimeout(()=>el.classList.remove("show"),7000);
+  beep(); if(navigator.vibrate) try{ navigator.vibrate(200); }catch(e){}
+}
+document.getElementById("alertbar").onclick=e=>e.target.classList.remove("show");
 
-async function refresh(){ vehicles=await store.list(); render(); }
+function checkAlerts(old){
+  if(!me) return;
+  vehicles.forEach(v=>{
+    const o=old[v.id]||{}; const ns=v.req_state||null;
+    if(me.role==="assistant"){
+      if(ns==="requested" && o.state!=="requested"){ const r=REQ[v.req_type]||REQ.pull_up; notify(`${r.icon} ${r.short} requested — ${labelOf(v)}`); }
+    } else {
+      if(v.req_by===me.name){
+        if(ns==="on_it" && o.state!=="on_it") notify(`🅿️ ${v.req_claimed_by||"Someone"} is on it — ${labelOf(v)}`);
+        else if(ns==="done" && o.state!=="done") notify(`✅ Ready out front — ${labelOf(v)}`);
+      }
+    }
+  });
+}
+function labelOf(v){ return [v.tag?fmtTag(v.tag):"", v.name].filter(Boolean).join(" ")||"vehicle"; }
+
+/* ============================================================ RENDER ============================================================ */
+let vehicles=[], editing=null, selectedStatus=STATUSES[0].key, firstLoad=true;
+
+async function refresh(){
+  const old={}; vehicles.forEach(v=> old[v.id]={state:v.req_state||null});
+  vehicles=await store.list();
+  if(!firstLoad) checkAlerts(old);
+  firstLoad=false;
+  render();
+}
 
 function render(){
-  renderCards();
+  document.getElementById("whoBtn").textContent = me? me.name : "Set name";
+  if(!me){
+    document.getElementById("cards").innerHTML="";
+    document.getElementById("queueSection").style.display="none";
+    document.getElementById("count").textContent="Tap to choose who you are →";
+    openIdModal(); return;
+  }
+  if(me.role==="assistant") renderAssistant(); else renderAdvisor();
   const n=vehicles.filter(v=>v.status!=="gone").length;
   document.getElementById("count").textContent =
-    `${n} active` + (store.live ? " · live" : " · preview (this device only)");
+    `${n} active · ${me.role==="assistant"?"Shop Assistant":"Service Advisor"}` + (store.live?" · live":" · preview (this device)");
 }
 
-function renderCards(){
-  const el=document.getElementById("cards"); const list=filtered();
-  if(!list.length){ el.innerHTML=`<div class="empty">Nothing here yet.<br>Tap <b>+ Add vehicle</b> to put one on the board.</div>`; return; }
-  el.innerHTML=list.map(v=>{
-    const s=statusOf(v.status);
-    return `<div class="veh ${v.status==='gone'?'gone':''}" data-id="${v.id}" style="border-left-color:${s.color}">
-      <div class="top">
-        <div>
-          <div class="idline">
-            ${v.tag?`<span class="tag">${esc(fmtTag(v.tag))}</span>`:""}
-            <span class="name">${esc(v.name)||"(no name)"}</span>
-          </div>
-          <div class="vehmodel">${esc(v.vehicle)||"—"}</div>
-        </div>
-        <span class="pill" style="background:${s.color}22;color:${s.color}">${s.label}</span>
+function renderAdvisor(){
+  document.getElementById("queueSection").style.display="none";
+  const el=document.getElementById("cards");
+  el.innerHTML = vehicles.length ? vehicles.map(v=>vehCard(v,"advisor")).join("")
+    : `<div class="empty">No vehicles yet.<br>Tap <b>+ Add vehicle</b> to put one on the board.</div>`;
+  wire(el);
+}
+function renderAssistant(){
+  document.getElementById("queueSection").style.display="block";
+  const q=document.getElementById("queue");
+  const reqs=vehicles.filter(v=>v.req_state==="requested"||v.req_state==="on_it")
+    .sort((a,b)=>(a.req_at||"").localeCompare(b.req_at||""));
+  document.getElementById("queueTitle").textContent=`Active requests (${reqs.length})`;
+  q.innerHTML = reqs.length ? reqs.map(queueCard).join("") : `<div class="empty">No active requests right now. You're all caught up. ✨</div>`;
+  wire(q);
+  const el=document.getElementById("cards");
+  el.innerHTML = vehicles.length ? vehicles.map(v=>vehCard(v,"assistant")).join("")
+    : `<div class="empty">No vehicles on the board yet.</div>`;
+  wire(el);
+}
+
+function cardHead(v){
+  const s=statusOf(v.status);
+  return `<div class="top">
+      <div>
+        <div class="idline">${v.tag?`<span class="tag">${esc(fmtTag(v.tag))}</span>`:""}<span class="name">${esc(v.name)||"(no name)"}</span></div>
+        <div class="vehmodel">${esc(v.vehicle)||"—"}</div>
       </div>
-      <div class="meta">
-        <div class="m"><span class="lbl">🕒</span> ${esc(v.eta)||"—"}</div>
-        ${v.location?`<div class="m"><span class="lbl">📍</span> ${esc(v.location)}</div>`:""}
-      </div>
-      ${v.notes?`<div class="foot">📝 ${esc(v.notes)}</div>`:""}
-      <div class="foot">Updated ${timeAgo(v.updated_at)}</div>
+      <span class="pill" style="background:${s.color}22;color:${s.color}">${s.label}</span>
+    </div>
+    <div class="meta">
+      <div class="m"><span class="lbl">🕒</span> ${esc(v.eta)||"—"}</div>
+      ${v.location?`<div class="m"><span class="lbl">📍</span> ${esc(v.location)}</div>`:""}
+    </div>
+    ${v.notes?`<div class="foot">📝 ${esc(v.notes)}</div>`:""}`;
+}
+
+function vehCard(v, mode){
+  const s=statusOf(v.status);
+  const reqArea = mode==="advisor" ? advisorReqArea(v) : readOnlyReqBadge(v);
+  return `<div class="veh ${v.status==='gone'?'gone':''}" data-id="${v.id}" data-edit="1" style="border-left-color:${s.color}">
+    ${cardHead(v)}
+    ${reqArea}
+    <div class="foot">Updated ${timeAgo(v.updated_at)}</div>
+  </div>`;
+}
+
+function advisorReqArea(v){
+  const st=v.req_state; const r=REQ[v.req_type]||REQ.pull_up;
+  if(!st) return `<div class="reqrow">
+      <button class="reqbtn pull" data-act="pull_up" data-id="${v.id}">🚗 Pull up</button>
+      <button class="reqbtn guest" data-act="guest" data-id="${v.id}">🧍 Guest arriving</button>
     </div>`;
-  }).join("");
-  el.querySelectorAll(".veh").forEach(c=>c.onclick=()=>openModal(vehicles.find(x=>x.id===c.dataset.id)));
+  if(st==="requested") return `<div class="reqstrip requested"><span>⏳ ${r.short} requested</span><button class="reqbtn ghost" data-act="cancelreq" data-id="${v.id}">Cancel</button></div>`;
+  if(st==="on_it") return `<div class="reqstrip on_it"><span>🅿️ ${esc(v.req_claimed_by||"Someone")} is on it · ${r.short}</span><button class="reqbtn ghost" data-act="cancelreq" data-id="${v.id}">Cancel</button></div>`;
+  if(st==="done") return `<div class="reqstrip done"><span>✅ Ready out front · ${r.short}</span><button class="reqbtn ghost" data-act="clearreq" data-id="${v.id}">Clear</button></div>`;
+  return "";
+}
+function readOnlyReqBadge(v){
+  if(!v.req_state) return "";
+  const r=REQ[v.req_type]||REQ.pull_up;
+  const map={ requested:`⏳ ${r.short} requested`, on_it:`🅿️ ${esc(v.req_claimed_by||"")} on it`, done:`✅ Ready out front` };
+  return `<div class="reqstrip ${v.req_state}"><span>${map[v.req_state]||""}</span></div>`;
 }
 
-/* modal */
+function queueCard(v){
+  const r=REQ[v.req_type]||REQ.pull_up; const st=v.req_state;
+  const action = st==="requested"
+    ? `<button class="reqbtn onitbtn" data-act="claim" data-id="${v.id}">✋ On it</button>`
+    : `<span class="whoon">🅿️ ${esc(v.req_claimed_by||"Someone")} is on it</span><button class="reqbtn donebtn" data-act="done" data-id="${v.id}">✓ Done</button>`;
+  return `<div class="veh qcard" data-id="${v.id}">
+    <div class="top">
+      <div>
+        <div class="idline">${v.tag?`<span class="tag">${esc(fmtTag(v.tag))}</span>`:""}<span class="name">${esc(v.name)||"(no name)"}</span></div>
+        <div class="vehmodel">${esc(v.vehicle)||"—"}</div>
+      </div>
+      <span class="pill" style="background:${'#f59e0b'}22;color:#f59e0b">${r.icon} ${r.short}</span>
+    </div>
+    <div class="meta">
+      ${v.location?`<div class="m"><span class="lbl">📍</span> ${esc(v.location)}</div>`:""}
+      ${v.eta?`<div class="m"><span class="lbl">🕒</span> ${esc(v.eta)}</div>`:""}
+    </div>
+    <div class="foot">Requested by ${esc(v.req_by||"—")} · ${timeAgo(v.req_at)}</div>
+    <div class="reqrow">${action}</div>
+  </div>`;
+}
+
+function wire(container){
+  container.querySelectorAll("[data-act]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); handleAct(b.dataset.act, b.dataset.id); });
+  container.querySelectorAll(".veh[data-edit]").forEach(c=> c.onclick=()=> openModal(vehicles.find(x=>x.id===c.dataset.id)));
+}
+
+async function handleAct(act,id){
+  const v=vehicles.find(x=>x.id===id); if(!v) return;
+  const now=new Date().toISOString();
+  if(act==="pull_up"||act==="guest"){ v.req_type=act; v.req_state="requested"; v.req_by=me.name; v.req_claimed_by=null; v.req_at=now; v.req_updated=now; }
+  else if(act==="cancelreq"||act==="clearreq"){ v.req_type=null; v.req_state=null; v.req_by=null; v.req_claimed_by=null; v.req_at=null; v.req_updated=now; }
+  else if(act==="claim"){ v.req_state="on_it"; v.req_claimed_by=me.name; v.req_updated=now; }
+  else if(act==="done"){ v.req_state="done"; v.req_updated=now; }
+  await store.save(v);
+  const msg={pull_up:"Pull-up requested",guest:"Guest heads-up sent",claim:"You're on it",done:"Marked ready",cancelreq:"Request cancelled",clearreq:"Cleared"}[act];
+  toast(msg||"Updated");
+  if(!store.live) refresh();
+}
+
+/* ============================================================ EDIT MODAL ============================================================ */
 const modal=document.getElementById("modal");
 function openModal(v){
   editing=v||null;
@@ -304,36 +475,29 @@ function openModal(v){
   document.getElementById("f-eta").value=v?.eta||"";
   document.getElementById("f-name").value=v?.name||"";
   document.getElementById("f-vehicle").value=v?.vehicle||"";
-  renderLocationSelect(v?.location||"");
   document.getElementById("f-notes").value=v?.notes||"";
-  selectedStatus=v?.status||STATUSES[0].key;
-  renderStatusGrid();
+  renderLocationSelect(v?.location||"");
+  selectedStatus=v?.status||STATUSES[0].key; renderStatusGrid();
   document.getElementById("delBtn").style.display=v?"block":"none";
   modal.classList.add("show");
   if(!v) setTimeout(()=>document.getElementById("f-tag").focus(),50);
 }
 function closeModal(){ modal.classList.remove("show"); editing=null; }
-
 function renderStatusGrid(){
   const el=document.getElementById("statusGrid");
-  el.innerHTML=STATUSES.map(s=>{
-    const sel=s.key===selectedStatus;
-    return `<div class="sbtn ${sel?'sel':''}" data-s="${s.key}" style="${sel?`background:${s.color}`:''}">${s.label}</div>`;
-  }).join("");
-  el.querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{selectedStatus=b.dataset.s;renderStatusGrid();});
+  el.innerHTML=STATUSES.map(s=>{ const sel=s.key===selectedStatus;
+    return `<div class="sbtn ${sel?'sel':''}" data-s="${s.key}" style="${sel?`background:${s.color}`:''}">${s.label}</div>`; }).join("");
+  el.querySelectorAll(".sbtn").forEach(b=>b.onclick=()=>{ selectedStatus=b.dataset.s; renderStatusGrid(); });
 }
-
 document.getElementById("addBtn").onclick=()=>openModal(null);
 document.getElementById("cancelBtn").onclick=closeModal;
 modal.onclick=e=>{ if(e.target===modal) closeModal(); };
-
 document.getElementById("saveBtn").onclick=async()=>{
-  const v={
-    id:editing?.id,
+  const base = editing ? {...editing} : {};
+  const v={ ...base, id:editing?.id,
     tag:val("f-tag"), eta:val("f-eta"), name:val("f-name"),
     vehicle:val("f-vehicle"), location:val("f-location"), notes:val("f-notes"),
-    status:selectedStatus,
-  };
+    status:selectedStatus };
   if(v.location==="__add__") v.location="";
   if(!v.name && !v.tag){ document.getElementById("f-tag").focus(); return; }
   await store.save(v); closeModal(); toast("Saved ✓");
@@ -346,27 +510,22 @@ document.getElementById("delBtn").onclick=async()=>{
   if(!store.live) refresh();
 };
 
-/* location dropdown: "+ Add new location…" inline, and the Manage modal */
+/* location dropdown add-new + manage */
 const locSelect=document.getElementById("f-location");
 locSelect.onchange=()=>{
   if(locSelect.value==="__add__"){
     const name=(prompt("New location name:")||"").trim();
     if(name){ if(!locations.includes(name)){ locations.push(name); saveLocations(); } renderLocationSelect(name); }
-    else { renderLocationSelect(lastLocationValue); }
-  } else { lastLocationValue=locSelect.value; }
+    else renderLocationSelect(lastLocationValue);
+  } else lastLocationValue=locSelect.value;
 };
-
 const locModal=document.getElementById("locModal");
 document.getElementById("manageLocBtn").onclick=()=>{ renderLocList(); locModal.classList.add("show"); };
 function closeLocModal(){ locModal.classList.remove("show"); renderLocationSelect(lastLocationValue); }
 document.getElementById("closeLocBtn").onclick=closeLocModal;
 locModal.onclick=e=>{ if(e.target===locModal) closeLocModal(); };
-document.getElementById("addLocBtn").onclick=()=>{
-  const inp=document.getElementById("newLoc"); const name=inp.value.trim();
-  if(!name) return;
-  if(!locations.includes(name)) locations.push(name);
-  saveLocations(); inp.value=""; renderLocList();
-};
+document.getElementById("addLocBtn").onclick=()=>{ const inp=document.getElementById("newLoc"); const name=inp.value.trim();
+  if(!name) return; if(!locations.includes(name)) locations.push(name); saveLocations(); inp.value=""; renderLocList(); };
 document.getElementById("newLoc").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); document.getElementById("addLocBtn").click(); } });
 function renderLocList(){
   const el=document.getElementById("locList");
@@ -375,37 +534,28 @@ function renderLocList(){
   el.querySelectorAll(".x").forEach(b=>b.onclick=()=>{ locations.splice(+b.dataset.i,1); saveLocations(); renderLocList(); });
 }
 
-/* Copy current list as a Slack-ready message: Name / Vehicle / #Tag / Time */
+/* copy list for Slack */
 document.getElementById("copyBtn").onclick=async(e)=>{
-  const list=filtered();
-  if(!list.length){ toast("Nothing to copy"); return; }
-  const lines=[LIST_TITLES[activeFilter]||"VEHICLES"];
-  list.forEach(v=>{
-    const parts=[v.name, v.vehicle, v.tag?fmtTag(v.tag):"", v.eta].map(x=>(x||"").trim()).filter(Boolean);
-    let line=parts.join(" / ");
-    if(v.status==="gone") line+="  — GONE";
-    lines.push(line);
+  if(!vehicles.length){ toast("Nothing to copy"); return; }
+  const lines=["VEHICLE CALL-UPS"];
+  vehicles.forEach(v=>{
+    const parts=[v.name,v.vehicle,v.tag?fmtTag(v.tag):"",v.eta].map(x=>(x||"").trim()).filter(Boolean);
+    let line=parts.join(" / "); if(v.status==="gone") line+="  — GONE"; lines.push(line);
   });
   const text=lines.join("\n");
   try{ await navigator.clipboard.writeText(text); }
   catch(err){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
-  const b=e.target; const o=b.textContent; b.classList.add("done"); b.textContent="Copied ✓";
+  const b=e.target,o=b.textContent; b.classList.add("done"); b.textContent="Copied ✓";
   setTimeout(()=>{ b.classList.remove("done"); b.textContent=o; },1400);
   toast("List copied for Slack ✓");
 };
 
 /* helpers */
 function val(id){ return document.getElementById(id).value.trim(); }
-function fmtTag(t){ t=(t||"").trim(); return /^[#T]/i.test(t) ? t : "#"+t; }
+function fmtTag(t){ t=(t||"").trim(); return /^[#T]/i.test(t)?t:"#"+t; }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function timeAgo(iso){
-  if(!iso) return "just now";
-  const d=(Date.now()-new Date(iso))/1000;
-  if(d<60) return "just now";
-  if(d<3600) return Math.floor(d/60)+" min ago";
-  if(d<86400) return Math.floor(d/3600)+" hr ago";
-  return new Date(iso).toLocaleDateString();
-}
+function timeAgo(iso){ if(!iso) return "just now"; const d=(Date.now()-new Date(iso))/1000;
+  if(d<60) return "just now"; if(d<3600) return Math.floor(d/60)+" min ago"; if(d<86400) return Math.floor(d/3600)+" hr ago"; return new Date(iso).toLocaleDateString(); }
 let toastTimer;
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1500); }
@@ -414,18 +564,15 @@ function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg
 function boot(){
   store = LIVE ? supabaseStore() : localStore();
   store.onChange(refresh);
-  if(!LIVE){
-    const b=document.getElementById("banner"); b.className="banner show";
-    b.innerHTML="⚠️ <b>Preview mode.</b> Vehicles are saved only on this device and are not shared with your team yet. Send your two Supabase values to turn on live sync.";
-  }
+  if(!LIVE){ const b=document.getElementById("banner"); b.className="banner show";
+    b.innerHTML="⚠️ <b>Preview mode.</b> Saved only on this device — the request loop works across two tabs on this computer, but needs Supabase to work between real phones. Send your two Supabase values to go live."; }
   refresh();
 }
 if(LIVE){
-  const s=document.createElement("script");
-  s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+  const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
   s.onload=boot; s.onerror=()=>{ document.getElementById("count").textContent="Could not load sync library"; };
   document.head.appendChild(s);
-}else{ boot(); }
+}else boot();
 </script>
 </body>
 </html>
