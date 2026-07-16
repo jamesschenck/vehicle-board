@@ -72,6 +72,7 @@
   .reqstrip.on_it{background:#12314a;color:#7cc4ff}
   .reqstrip.done{background:#0f2f1c;color:#6ee7a0}
   .whoon{font-size:13.5px;color:#7cc4ff;font-weight:700;align-self:center;margin-right:auto}
+  .since{font-variant-numeric:tabular-nums;opacity:.9}
   .qcard{border-left-color:var(--warn)!important}
 
   .fab{position:fixed;right:18px;bottom:20px;z-index:20;background:var(--accent);color:#fff;border:none;
@@ -242,7 +243,7 @@ function renderLocationSelect(current){
 /* ============================================================ STORE ============================================================ */
 const LIVE = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 let store;
-const REQ_FIELDS = ["req_type","req_state","req_by","req_claimed_by","req_at","req_updated"];
+const REQ_FIELDS = ["req_type","req_state","req_by","req_claimed_by","req_at","req_claimed_at","req_updated"];
 
 function localStore(){
   const KEY="callup_board_v1";
@@ -415,14 +416,14 @@ function advisorReqArea(v){
       <button class="reqbtn guest" data-act="guest" data-id="${v.id}">🧍 Guest arriving</button>
     </div>`;
   if(st==="requested") return `<div class="reqstrip requested"><span>⏳ ${r.short} requested</span><button class="reqbtn ghost" data-act="cancelreq" data-id="${v.id}">Cancel</button></div>`;
-  if(st==="on_it") return `<div class="reqstrip on_it"><span>🅿️ ${esc(v.req_claimed_by||"Someone")} is on it · ${r.short}</span><button class="reqbtn ghost" data-act="cancelreq" data-id="${v.id}">Cancel</button></div>`;
+  if(st==="on_it") return `<div class="reqstrip on_it"><span>🅿️ ${esc(v.req_claimed_by||"Someone")} is on it · ${since(v.req_claimed_at)} · ${r.short}</span><button class="reqbtn ghost" data-act="cancelreq" data-id="${v.id}">Cancel</button></div>`;
   if(st==="done") return `<div class="reqstrip done"><span>✅ Ready out front · ${r.short}</span><button class="reqbtn ghost" data-act="clearreq" data-id="${v.id}">Clear</button></div>`;
   return "";
 }
 function readOnlyReqBadge(v){
   if(!v.req_state) return "";
   const r=REQ[v.req_type]||REQ.pull_up;
-  const map={ requested:`⏳ ${r.short} requested`, on_it:`🅿️ ${esc(v.req_claimed_by||"")} on it`, done:`✅ Ready out front` };
+  const map={ requested:`⏳ ${r.short} requested`, on_it:`🅿️ ${esc(v.req_claimed_by||"")} on it · ${since(v.req_claimed_at)}`, done:`✅ Ready out front` };
   return `<div class="reqstrip ${v.req_state}"><span>${map[v.req_state]||""}</span></div>`;
 }
 
@@ -430,7 +431,7 @@ function queueCard(v){
   const r=REQ[v.req_type]||REQ.pull_up; const st=v.req_state;
   const action = st==="requested"
     ? `<button class="reqbtn onitbtn" data-act="claim" data-id="${v.id}">✋ On it</button>`
-    : `<span class="whoon">🅿️ ${esc(v.req_claimed_by||"Someone")} is on it</span><button class="reqbtn donebtn" data-act="done" data-id="${v.id}">✓ Done</button>`;
+    : `<span class="whoon">🅿️ ${esc(v.req_claimed_by||"Someone")} · on it ${since(v.req_claimed_at)}</span><button class="reqbtn donebtn" data-act="done" data-id="${v.id}">✓ Done</button>`;
   return `<div class="veh qcard" data-id="${v.id}">
     <div class="top">
       <div>
@@ -456,9 +457,9 @@ function wire(container){
 async function handleAct(act,id){
   const v=vehicles.find(x=>x.id===id); if(!v) return;
   const now=new Date().toISOString();
-  if(act==="pull_up"||act==="guest"){ v.req_type=act; v.req_state="requested"; v.req_by=me.name; v.req_claimed_by=null; v.req_at=now; v.req_updated=now; }
-  else if(act==="cancelreq"||act==="clearreq"){ v.req_type=null; v.req_state=null; v.req_by=null; v.req_claimed_by=null; v.req_at=null; v.req_updated=now; }
-  else if(act==="claim"){ v.req_state="on_it"; v.req_claimed_by=me.name; v.req_updated=now; }
+  if(act==="pull_up"||act==="guest"){ v.req_type=act; v.req_state="requested"; v.req_by=me.name; v.req_claimed_by=null; v.req_at=now; v.req_claimed_at=null; v.req_updated=now; }
+  else if(act==="cancelreq"||act==="clearreq"){ v.req_type=null; v.req_state=null; v.req_by=null; v.req_claimed_by=null; v.req_at=null; v.req_claimed_at=null; v.req_updated=now; }
+  else if(act==="claim"){ v.req_state="on_it"; v.req_claimed_by=me.name; v.req_claimed_at=now; v.req_updated=now; }
   else if(act==="done"){ v.req_state="done"; v.req_updated=now; }
   await store.save(v);
   const msg={pull_up:"Pull-up requested",guest:"Guest heads-up sent",claim:"You're on it",done:"Marked ready",cancelreq:"Request cancelled",clearreq:"Cleared"}[act];
@@ -556,6 +557,11 @@ function fmtTag(t){ t=(t||"").trim(); return /^[#T]/i.test(t)?t:"#"+t; }
 function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function timeAgo(iso){ if(!iso) return "just now"; const d=(Date.now()-new Date(iso))/1000;
   if(d<60) return "just now"; if(d<3600) return Math.floor(d/60)+" min ago"; if(d<86400) return Math.floor(d/3600)+" hr ago"; return new Date(iso).toLocaleDateString(); }
+function durShort(iso){ if(!iso) return ""; let s=Math.max(0,(Date.now()-new Date(iso))/1000);
+  if(s<60) return "just now"; const m=Math.floor(s/60); if(m<60) return m+" min"; const h=Math.floor(m/60); return h+" hr "+(m%60)+" min"; }
+function since(iso){ return `<span class="since" data-ts="${iso||""}">${durShort(iso)}</span>`; }
+function tickTimers(){ document.querySelectorAll(".since[data-ts]").forEach(el=>{ if(el.dataset.ts) el.textContent=durShort(el.dataset.ts); }); }
+setInterval(tickTimers, 15000);
 let toastTimer;
 function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1500); }
