@@ -66,7 +66,9 @@
   .reqbtn.onitbtn{background:var(--accent);color:#fff}
   .reqbtn.donebtn{background:var(--good);color:#04210f;flex:0 0 auto;padding:11px 20px}
   .reqbtn.ghost{flex:0 0 auto;background:transparent;border:1.5px solid var(--line);color:var(--muted);padding:9px 13px;font-size:13px}
-  .reqstrip{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:11px;
+  .reqbtn.gonebtn{flex:0 0 auto;background:var(--good);color:#04210f;padding:9px 14px;font-size:13px}
+  .reqbtns{display:flex;gap:8px;flex:none}
+  .reqstrip{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:11px;
     padding:9px 12px;border-radius:10px;font-size:13.5px;font-weight:700}
   .reqstrip.requested{background:#3a2a12;color:#f6c877}
   .reqstrip.on_it{background:#12314a;color:#7cc4ff}
@@ -143,6 +145,10 @@
     <div class="secttitle spaced">All vehicles</div>
   </div>
   <div class="cards" id="cards"></div>
+  <div id="goneSection" style="display:none">
+    <div class="secttitle spaced">Gone</div>
+    <div class="cards" id="goneCards"></div>
+  </div>
 </div>
 
 <button class="fab" id="addBtn">+ Add vehicle</button>
@@ -364,10 +370,12 @@ function render(){
 
 function renderAdvisor(){
   document.getElementById("queueSection").style.display="none";
+  const active=vehicles.filter(v=>v.status!=="gone");
   const el=document.getElementById("cards");
-  el.innerHTML = vehicles.length ? vehicles.map(v=>vehCard(v,"advisor")).join("")
+  el.innerHTML = active.length ? active.map(v=>vehCard(v,"advisor")).join("")
     : `<div class="empty">No vehicles yet.<br>Tap <b>+ Add vehicle</b> to put one on the board.</div>`;
   wire(el);
+  renderGone("advisor");
 }
 function renderAssistant(){
   document.getElementById("queueSection").style.display="block";
@@ -377,10 +385,19 @@ function renderAssistant(){
   document.getElementById("queueTitle").textContent=`Active requests (${reqs.length})`;
   q.innerHTML = reqs.length ? reqs.map(queueCard).join("") : `<div class="empty">No active requests right now. You're all caught up. ✨</div>`;
   wire(q);
+  const active=vehicles.filter(v=>v.status!=="gone");
   const el=document.getElementById("cards");
-  el.innerHTML = vehicles.length ? vehicles.map(v=>vehCard(v,"assistant")).join("")
+  el.innerHTML = active.length ? active.map(v=>vehCard(v,"assistant")).join("")
     : `<div class="empty">No vehicles on the board yet.</div>`;
   wire(el);
+  renderGone("assistant");
+}
+function renderGone(mode){
+  const gone=vehicles.filter(v=>v.status==="gone");
+  const sec=document.getElementById("goneSection"), el=document.getElementById("goneCards");
+  if(!gone.length){ sec.style.display="none"; el.innerHTML=""; return; }
+  sec.style.display="block";
+  el.innerHTML=gone.map(v=>vehCard(v,mode)).join(""); wire(el);
 }
 
 function cardHead(v){
@@ -401,7 +418,9 @@ function cardHead(v){
 
 function vehCard(v, mode){
   const s=statusOf(v.status);
-  const reqArea = mode==="advisor" ? advisorReqArea(v) : readOnlyReqBadge(v);
+  let reqArea;
+  if(v.status==="gone") reqArea = mode==="advisor" ? `<div class="reqrow"><button class="reqbtn ghost" data-act="restore" data-id="${v.id}">↩ Put back on board</button></div>` : "";
+  else reqArea = mode==="advisor" ? advisorReqArea(v) : readOnlyReqBadge(v);
   return `<div class="veh ${v.status==='gone'?'gone':''}" data-id="${v.id}" data-edit="1" style="border-left-color:${s.color}">
     ${cardHead(v)}
     ${reqArea}
@@ -417,7 +436,7 @@ function advisorReqArea(v){
     </div>`;
   if(st==="requested") return `<div class="reqstrip requested"><span>⏳ ${r.short} requested</span><button class="reqbtn ghost" data-act="cancelreq" data-id="${v.id}">Cancel</button></div>`;
   if(st==="on_it") return `<div class="reqstrip on_it"><span>🅿️ ${esc(v.req_claimed_by||"Someone")} is on it · ${since(v.req_claimed_at)} · ${r.short}</span><button class="reqbtn ghost" data-act="cancelreq" data-id="${v.id}">Cancel</button></div>`;
-  if(st==="done") return `<div class="reqstrip done"><span>✅ Ready out front · ${r.short}</span><button class="reqbtn ghost" data-act="clearreq" data-id="${v.id}">Clear</button></div>`;
+  if(st==="done") return `<div class="reqstrip done"><span>✅ Ready out front · ${r.short}</span><span class="reqbtns"><button class="reqbtn gonebtn" data-act="gone" data-id="${v.id}">🏁 Mark gone</button><button class="reqbtn ghost" data-act="clearreq" data-id="${v.id}">Clear</button></span></div>`;
   return "";
 }
 function readOnlyReqBadge(v){
@@ -461,8 +480,10 @@ async function handleAct(act,id){
   else if(act==="cancelreq"||act==="clearreq"){ v.req_type=null; v.req_state=null; v.req_by=null; v.req_claimed_by=null; v.req_at=null; v.req_claimed_at=null; v.req_updated=now; }
   else if(act==="claim"){ v.req_state="on_it"; v.req_claimed_by=me.name; v.req_claimed_at=now; v.req_updated=now; }
   else if(act==="done"){ v.req_state="done"; v.req_updated=now; }
+  else if(act==="gone"){ v.status="gone"; v.req_type=null; v.req_state=null; v.req_by=null; v.req_claimed_by=null; v.req_at=null; v.req_claimed_at=null; v.req_updated=now; }
+  else if(act==="restore"){ v.status="call_up"; v.req_updated=now; }
   await store.save(v);
-  const msg={pull_up:"Pull-up requested",guest:"Guest heads-up sent",claim:"You're on it",done:"Marked ready",cancelreq:"Request cancelled",clearreq:"Cleared"}[act];
+  const msg={pull_up:"Pull-up requested",guest:"Guest heads-up sent",claim:"You're on it",done:"Marked ready",cancelreq:"Request cancelled",clearreq:"Cleared",gone:"Marked gone 🏁",restore:"Back on board"}[act];
   toast(msg||"Updated");
   if(!store.live) refresh();
 }
